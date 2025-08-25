@@ -36,7 +36,7 @@ export type EvaluateLoanApplicationInput = z.infer<typeof EvaluateLoanApplicatio
 const BANK_RULES = `
 - Minimum credit score: 600
 - Maximum Debt-to-Income ratio: 45%
-- Applicant must have a stable income source.
+- Applicant must have a stable income source. This is a mandatory requirement.
 - No bankruptcies in the last 7 years.
 - Loan amount cannot exceed 30% of annual income.
 `;
@@ -87,9 +87,11 @@ const prompt = ai.definePrompt({
 
   Based on the entire profile (including any previous and new information) and bank rules, generate a credit score, determine eligibility, explain the decision, and list any violations (including information mismatches).
 
+  CRITICAL RULE: The applicant MUST have a verifiable, stable source of income. If you cannot find ANY information about the applicant's income (salary, business revenue, etc.) from the provided documents or text, you MUST set 'isEligible' to false and add a 'violationFlag' stating "No proof of income provided; automatic rejection.". This is a mandatory requirement for any loan approval.
+
   After determining the credit score, you MUST generate a 'creditScoreBreakdown'. This breakdown should be an array of objects, where each object contains a 'factor' (a string) and 'points' (a number). Use clear, descriptive factor names (e.g., "Income Stability", "Document Consistency", "Credit History"). Only include factors for which you have information. For example, if no income information is provided, do not include "Income Stability" in the breakdown. The sum of the points in the breakdown should be close to the final creditScore.
   
-  If the applicant is eligible, provide 2-3 realistic loan amount recommendations. The recommendations should be based on the applicant's inferred income and the bank rule that the loan amount cannot exceed 30% of annual income. For each recommendation, provide the loan amount, a suggested term (e.g., '12 months', '24 months'), and an estimated monthly payment. Populate the 'loanRecommendations' field with these suggestions. If the applicant is not eligible, return an empty array for this field.
+  If the applicant is eligible AND you were able to determine their income, provide 2-3 realistic loan amount recommendations. The recommendations should be based on the applicant's inferred income and the bank rule that the loan amount cannot exceed 30% of annual income. For each recommendation, provide the loan amount, a suggested term (e.g., '12 months', '24 months'), and an estimated monthly payment. Populate the 'loanRecommendations' field with these suggestions. If the applicant is not eligible or income is unknown, return an empty array for this field.
 
   Ensure the explanation is in plain language, formatted as a markdown bulleted list (using '*' for bullets), and highlights key factors and any violations for the loan officer.
 
